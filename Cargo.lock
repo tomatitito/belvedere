@@ -6724,6 +6724,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "gastown"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.11.8",
+ "futures 0.3.31",
+ "git",
+ "gpui",
+ "log",
+ "menu",
+ "picker",
+ "project",
+ "smol",
+ "theme",
+ "ui",
+ "workspace",
+]
+
+[[package]]
 name = "gemm"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

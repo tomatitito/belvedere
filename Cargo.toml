@@ -203,6 +203,7 @@ members = [
     "crates/worktree_benchmarks",
     "crates/x_ai",
     "crates/zed",
+    "crates/gastown",
     "crates/zed_actions",
     "crates/zed_env_vars",
     "crates/edit_prediction_cli",
@@ -229,7 +230,7 @@ members = [
     "tooling/perf",
     "tooling/xtask",
 ]
-default-members = ["crates/zed"]
+default-members = ["crates/gastown"]
 
 [workspace.package]
 publish = false
