@@ -1,0 +1,18 @@
+[package]
+name = "gastown"
+version = "0.1.0"
+edition = "2021"
+description = "Gas Town - Multi-agent workspace manager UI"
+license = "MIT"
+default-run = "gastown"
+
+[[bin]]
+name = "gastown"
+path = "src/main.rs"
+
+[dependencies]
+# Core GPUI framework - absolute minimum
+gpui.workspace = true
+
+# Basic utilities
+anyhow.workspace = true
