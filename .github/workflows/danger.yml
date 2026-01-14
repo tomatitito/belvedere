@@ -36,5 +36,4 @@ jobs:
       run: pnpm run --dir script/danger danger ci
       shell: bash -euxo pipefail {0}
       env:
-        GITHUB_TOKEN: not_a_real_token
-        DANGER_GITHUB_API_BASE_URL: https://danger-proxy.zed.dev/github
+        DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}

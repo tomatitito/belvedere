@@ -27,15 +27,11 @@ fn danger_job() -> NamedJob {
 
     pub fn run() -> Step<Run> {
         named::bash("pnpm run --dir script/danger danger ci")
-            // This GitHub token is not used, but the value needs to be here to prevent
-            // Danger from throwing an error.
-            .add_env(("GITHUB_TOKEN", "not_a_real_token"))
-            // All requests are instead proxied through a proxy that allows Danger to securely authenticate with GitHub
-            // while still being able to run on PRs from forks.
-            .add_env((
-                "DANGER_GITHUB_API_BASE_URL",
-                "https://danger-proxy.zed.dev/github",
-            ))
+            // Use the built-in GITHUB_TOKEN for authentication.
+            // Note: This won't work for PRs from forks (external contributors)
+            // since GITHUB_TOKEN has restricted permissions on fork PRs.
+            // For fork PR support, use a PAT stored as DANGER_GITHUB_API_TOKEN secret.
+            .add_env(("DANGER_GITHUB_API_TOKEN", "${{ secrets.GITHUB_TOKEN }}"))
     }
 
     NamedJob {
