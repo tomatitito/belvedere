@@ -1,38 +1,136 @@
-# Zed
+# Gazetown Development Environment
 
-[![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
-[![CI](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml/badge.svg)](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml)
+A multi-component system for managing Gazetown instances, overseer operations, and background services.
 
-Welcome to Zed, a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
+## Components
+
+### Core Services
+- **mayor/** - Overseer management system
+  - Mail inbox management (`gt mail inbox`)
+  - Rig operations (`gt rig list`)
+  - Patrol coordination (`gt patrol start`)
+
+- **daemon/** - Background activity tracking and monitoring
+- **deacon/** - Service lifecycle management
+
+### Gazetown Instances
+- **gastown/** - Primary Gazetown instance
+- **gazetown/** - Secondary Gazetown instance with extended documentation
+
+Both instances include:
+- **crew/** - Team and agent management
+- **polecats/** - Task execution and coordination
+- **refinery/** - Data processing and transformation
+- **witness/** - Event observation and logging
+
+### Extensions
+- **plugins/** - Plugin system for extending functionality
+- **settings/** - Global configuration management
+
+## Quick Start
+
+### Prerequisites
+- Rust and Cargo (for building the Gazetown GPUI application)
+- Beads CLI (`bd`) for issue tracking
+- GT tools for Gazetown operations
+
+### Starting the Gazetown Application
+
+The Gazetown app is a minimal GPUI application built on the Zed framework:
+
+```bash
+# Check if it compiles
+cargo check -p gastown
+
+# Build the application
+cargo build -p gastown
+
+# Run the Gazetown UI
+cargo run -p gastown
+```
+
+This opens a window titled "Gas Town" - a multi-agent development workspace UI. The application is located in `crates/gastown/` and provides a foundation for rig management and agent coordination.
+
+### Basic Operations
+
+**Check system status:**
+```bash
+gt mail inbox         # Check overseer mail
+gt rig list          # List available rigs
+gt patrol start      # Start patrol operations
+```
+
+**Issue tracking:**
+```bash
+bd ready             # View available work
+bd list              # List all issues
+bd show <id>         # View issue details
+```
+
+## Development Workflow
+
+This project uses **Beads** for AI-native issue tracking. All issues are tracked locally in `.beads/issues.jsonl`.
+
+### Working with Issues
+
+```bash
+# Find work
+bd ready
+
+# Start working
+bd update <id> --status=in_progress
+
+# Complete work
+bd close <id>
+
+# Sync changes
+bd sync --flush-only
+```
+
+### Session Management
+
+**Starting a session:**
+```bash
+bd prime             # Restore context (auto-called by hooks)
+bd ready             # Find available work
+```
+
+**Ending a session:**
+```bash
+bd sync --flush-only # Export beads to JSONL
+```
+
+## Project Structure
+
+```
+gt/
+├── mayor/           # Overseer management
+├── gastown/         # Gazetown instance 1
+├── gazetown/        # Gazetown instance 2
+├── daemon/          # Background services
+├── deacon/          # Service management
+├── plugins/         # Extension system
+├── settings/        # Configuration
+└── .beads/          # Issue tracking data
+```
+
+## Configuration
+
+- **No git remote**: This repository operates in local-only mode
+- **Issue tracking**: Local JSONL storage via Beads
+- **Context recovery**: Automated via Claude Code hooks
+
+## Documentation
+
+- **CLAUDE.md / AGENTS.md** - AI agent workflow instructions
+- **mayor/CLAUDE.md** - Mayor-specific commands and context
+- **.beads/README.md** - Beads issue tracking guide
+
+## Learn More
+
+- **Beads Documentation**: [github.com/steveyegge/beads](https://github.com/steveyegge/beads)
+- **GT Tools**: Check individual component directories for specific documentation
 
 ---
 
-### Installation
-
-On macOS, Linux, and Windows you can [download Zed directly](https://zed.dev/download) or install Zed via your local package manager ([macOS](https://zed.dev/docs/installation#macos)/[Linux](https://zed.dev/docs/linux#installing-via-a-package-manager)/[Windows](https://zed.dev/docs/windows#package-managers)).
-
-Other platforms are not yet available:
-
-- Web ([tracking issue](https://github.com/zed-industries/zed/issues/5396))
-
-### Developing Zed
-
-- [Building Zed for macOS](./docs/src/development/macos.md)
-- [Building Zed for Linux](./docs/src/development/linux.md)
-- [Building Zed for Windows](./docs/src/development/windows.md)
-
-### Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for ways you can contribute to Zed.
-
-Also... we're hiring! Check out our [jobs](https://zed.dev/jobs) page for open roles.
-
-### Licensing
-
-License information for third party dependencies must be correctly provided for CI to pass.
-
-We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automatically comply with open source licenses. If CI is failing, check the following:
-
-- Is it showing a `no license specified` error for a crate you've created? If so, add `publish = false` under `[package]` in your crate's Cargo.toml.
-- Is the error `failed to satisfy license requirements` for a dependency? If so, first determine what license the project has and whether this system is sufficient to comply with this license's requirements. If you're unsure, ask a lawyer. Once you've verified that this system is acceptable add the license's SPDX identifier to the `accepted` array in `script/licenses/zed-licenses.toml`.
-- Is `cargo-about` unable to find the license for a dependency? If so, add a clarification field at the end of `script/licenses/zed-licenses.toml`, as specified in the [cargo-about book](https://embarkstudios.github.io/cargo-about/cli/generate/config.html#crate-configuration).
+*A development environment for Gazetown operations and multi-agent coordination*
