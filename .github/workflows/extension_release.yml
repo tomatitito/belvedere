@@ -12,8 +12,8 @@ on:
         required: true
 jobs:
   create_release:
-    if: (github.repository_owner == 'zed-industries' || github.repository_owner == 'zed-extensions')
-    runs-on: namespace-profile-2x4-ubuntu-2404
+    if: (github.repository_owner == 'tomatitito')
+    runs-on: ubuntu-latest
     steps:
     - id: generate-token
       name: extension_bump::generate_token
