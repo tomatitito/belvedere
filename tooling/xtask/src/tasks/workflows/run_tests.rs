@@ -293,14 +293,19 @@ pub(crate) fn run_platform_tests(platform: Platform) -> NamedJob {
             .runs_on(runner)
             .add_step(steps::checkout_repo())
             .add_step(steps::setup_cargo_config(platform))
-            .when(
-                platform == Platform::Linux || platform == Platform::Mac,
-                |this| this.add_step(steps::cache_rust_dependencies()),
-            )
+            // macOS: cache early (no disk space issues)
+            .when(platform == Platform::Mac, |this| {
+                this.add_step(steps::cache_rust_dependencies())
+            })
+            // Linux: install_linux_dependencies runs free_disk_space first
             .when(
                 platform == Platform::Linux,
                 steps::install_linux_dependencies,
             )
+            // Linux: cache after disk cleanup to avoid "no space left" errors
+            .when(platform == Platform::Linux, |this| {
+                this.add_step(steps::cache_rust_dependencies())
+            })
             .add_step(steps::setup_node())
             .add_step(steps::clippy(platform))
             .add_step(steps::cargo_install_nextest())
