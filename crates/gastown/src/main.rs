@@ -5,6 +5,7 @@ use std::sync::Arc;
 mod agent_section;
 mod convoy_section;
 mod dashboard_buffer;
+mod rig_section;
 
 use dashboard_buffer::{
     AgentInfo, AgentStatus, ConvoyInfo, DashboardData, DashboardDataSource, DashboardError,
