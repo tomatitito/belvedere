@@ -1,10 +1,46 @@
 #![allow(dead_code)]
 
 use gpui::{
-    App, Context, EventEmitter, FocusHandle, Focusable, IntoElement, ParentElement, Render,
-    SharedString, Styled, Window, div,
+    AnyElement, App, Context, EventEmitter, FocusHandle, Focusable, Hsla, IntoElement,
+    ParentElement, Render, Styled, Window, div, px, rgb,
 };
 use std::sync::Arc;
+
+/// Dashboard color palette matching Zed's One Dark theme.
+/// Values from: assets/themes/one/one.json
+struct DashboardPalette {
+    panel_bg: Hsla,
+    editor_bg: Hsla,
+    border: Hsla,
+    border_variant: Hsla,
+    text: Hsla,
+    text_muted: Hsla,
+    accent_success: Hsla,
+    accent_warning: Hsla,
+    accent_error: Hsla,
+    accent_info: Hsla,
+    element_bg: Hsla,
+    element_hover: Hsla,
+}
+
+impl DashboardPalette {
+    fn one_dark() -> Self {
+        Self {
+            panel_bg: rgb(0x2f343e).into(),
+            editor_bg: rgb(0x282c33).into(),
+            border: rgb(0x464b57).into(),
+            border_variant: rgb(0x363c46).into(),
+            text: rgb(0xdce0e5).into(),
+            text_muted: rgb(0xa9afbc).into(),
+            accent_success: rgb(0xa1c181).into(),
+            accent_warning: rgb(0xdec184).into(),
+            accent_error: rgb(0xd07277).into(),
+            accent_info: rgb(0x74ade8).into(),
+            element_bg: rgb(0x2e343e).into(),
+            element_hover: rgb(0x363c46).into(),
+        }
+    }
+}
 
 /// Events emitted by the dashboard when state changes
 #[derive(Clone, Debug)]
@@ -177,7 +213,8 @@ impl DashboardFormatter {
 /// This is a pure GPUI view - not a workspace Item.
 pub struct DashboardView {
     focus_handle: FocusHandle,
-    content: SharedString,
+    data: Option<DashboardData>,
+    error: Option<DashboardError>,
     data_source: Arc<dyn DashboardDataSource>,
     last_update: Option<std::time::Instant>,
     connection_status: ConnectionStatus,
@@ -194,7 +231,8 @@ impl DashboardView {
     pub fn new(data_source: Arc<dyn DashboardDataSource>, cx: &mut App) -> Self {
         let mut view = Self {
             focus_handle: cx.focus_handle(),
-            content: SharedString::from("Loading..."),
+            data: None,
+            error: None,
             data_source,
             last_update: None,
             connection_status: ConnectionStatus::Unknown,
@@ -203,8 +241,12 @@ impl DashboardView {
         view
     }
 
-    pub fn content(&self) -> &str {
-        &self.content
+    pub fn content(&self) -> String {
+        match (&self.data, &self.error) {
+            (Some(data), _) => DashboardFormatter::format(data),
+            (_, Some(err)) => DashboardFormatter::format_error(err),
+            _ => "Loading...".into(),
+        }
     }
 
     pub fn is_read_only(&self) -> bool {
@@ -234,11 +276,13 @@ impl DashboardView {
 
         match self.data_source.fetch() {
             Ok(data) => {
-                self.content = DashboardFormatter::format(&data).into();
+                self.data = Some(data);
+                self.error = None;
                 self.last_update = Some(std::time::Instant::now());
             }
             Err(err) => {
-                self.content = DashboardFormatter::format_error(&err).into();
+                self.data = None;
+                self.error = Some(err);
             }
         }
     }
@@ -254,10 +298,321 @@ impl EventEmitter<DashboardEvent> for DashboardView {}
 
 impl Render for DashboardView {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        let palette = DashboardPalette::one_dark();
+
+        let content: AnyElement = if let Some(ref data) = self.data {
+            self.render_data(data, &palette).into_any_element()
+        } else if let Some(ref err) = self.error {
+            self.render_error(err, &palette).into_any_element()
+        } else {
+            self.render_loading(&palette).into_any_element()
+        };
+
         div()
             .flex()
             .flex_col()
             .size_full()
-            .child(self.content.clone())
+            .bg(palette.editor_bg)
+            .text_color(palette.text)
+            .child(content)
+    }
+}
+
+impl DashboardView {
+    fn render_data(&self, data: &DashboardData, palette: &DashboardPalette) -> impl IntoElement {
+        div()
+            .flex()
+            .flex_col()
+            .size_full()
+            .p(px(16.0))
+            .gap(px(16.0))
+            .child(self.render_header(palette))
+            .child(self.render_agents_section(&data.agents, palette))
+            .child(self.render_convoys_section(&data.convoys, palette))
+            .child(self.render_rigs_section(&data.rigs, palette))
+    }
+
+    fn render_error(&self, error: &DashboardError, palette: &DashboardPalette) -> impl IntoElement {
+        let message = match error {
+            DashboardError::NotAvailable => "Dashboard unavailable\n\nRun 'gt up' to start Gastown",
+            DashboardError::FetchFailed(msg) => msg.as_str(),
+            DashboardError::ParseError(msg) => msg.as_str(),
+        };
+
+        div()
+            .flex()
+            .flex_col()
+            .size_full()
+            .items_center()
+            .justify_center()
+            .gap(px(8.0))
+            .child(
+                div()
+                    .text_color(palette.accent_error)
+                    .text_xl()
+                    .child("⚠ Error"),
+            )
+            .child(
+                div()
+                    .text_color(palette.text_muted)
+                    .child(message.to_string()),
+            )
+    }
+
+    fn render_loading(&self, palette: &DashboardPalette) -> impl IntoElement {
+        div()
+            .flex()
+            .size_full()
+            .items_center()
+            .justify_center()
+            .text_color(palette.text_muted)
+            .child("Loading...")
+    }
+
+    fn render_header(&self, palette: &DashboardPalette) -> impl IntoElement {
+        div()
+            .flex()
+            .items_center()
+            .justify_between()
+            .pb(px(8.0))
+            .border_b_1()
+            .border_color(palette.border_variant)
+            .child(
+                div()
+                    .text_xl()
+                    .text_color(palette.text)
+                    .child("Gastown Dashboard"),
+            )
+            .child(self.render_connection_status(palette))
+    }
+
+    fn render_connection_status(&self, palette: &DashboardPalette) -> impl IntoElement {
+        let (color, label) = match self.connection_status {
+            ConnectionStatus::Connected => (palette.accent_success, "● Connected"),
+            ConnectionStatus::Disconnected => (palette.accent_error, "○ Disconnected"),
+            ConnectionStatus::Unknown => (palette.text_muted, "? Unknown"),
+        };
+
+        div().text_sm().text_color(color).child(label)
+    }
+
+    fn render_agents_section(
+        &self,
+        agents: &[AgentInfo],
+        palette: &DashboardPalette,
+    ) -> impl IntoElement {
+        let items = if agents.is_empty() {
+            vec![
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .child("No agents running")
+                    .into_any_element(),
+            ]
+        } else {
+            agents
+                .iter()
+                .map(|agent| self.render_agent_row(agent, palette).into_any_element())
+                .collect()
+        };
+
+        self.render_section("Agents", items, palette)
+    }
+
+    fn render_agent_row(&self, agent: &AgentInfo, palette: &DashboardPalette) -> impl IntoElement {
+        let (status_icon, status_color) = match &agent.status {
+            AgentStatus::Active => ("●", palette.accent_success),
+            AgentStatus::Idle => ("○", palette.text_muted),
+            AgentStatus::Error(_) => ("✗", palette.accent_error),
+        };
+
+        let mut row = div()
+            .flex()
+            .items_center()
+            .gap(px(8.0))
+            .py(px(4.0))
+            .child(div().text_color(status_color).child(status_icon))
+            .child(div().text_color(palette.text).child(agent.name.clone()));
+
+        if let Some(fill) = agent.context_fill {
+            row = row.child(self.render_context_bar(fill, palette));
+        }
+
+        if let Some(ref tokens) = agent.token_usage {
+            row = row.child(
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .child(format!(
+                        "{}↓ {}↑",
+                        tokens.input_tokens, tokens.output_tokens
+                    )),
+            );
+        }
+
+        row
+    }
+
+    fn render_context_bar(&self, fill: f32, palette: &DashboardPalette) -> impl IntoElement {
+        let fill_percent = (fill * 100.0).round() as u32;
+        let bar_color = if fill > 0.8 {
+            palette.accent_warning
+        } else {
+            palette.accent_info
+        };
+
+        div()
+            .flex()
+            .items_center()
+            .gap(px(4.0))
+            .child(
+                div()
+                    .w(px(60.0))
+                    .h(px(6.0))
+                    .rounded(px(3.0))
+                    .bg(palette.element_bg)
+                    .child(
+                        div()
+                            .h_full()
+                            .w(px(60.0 * fill))
+                            .rounded(px(3.0))
+                            .bg(bar_color),
+                    ),
+            )
+            .child(
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .child(format!("{}%", fill_percent)),
+            )
+    }
+
+    fn render_convoys_section(
+        &self,
+        convoys: &[ConvoyInfo],
+        palette: &DashboardPalette,
+    ) -> impl IntoElement {
+        let items = if convoys.is_empty() {
+            vec![
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .child("No active convoys")
+                    .into_any_element(),
+            ]
+        } else {
+            convoys
+                .iter()
+                .map(|convoy| self.render_convoy_row(convoy, palette).into_any_element())
+                .collect()
+        };
+
+        self.render_section("Convoys", items, palette)
+    }
+
+    fn render_convoy_row(
+        &self,
+        convoy: &ConvoyInfo,
+        palette: &DashboardPalette,
+    ) -> impl IntoElement {
+        let progress_percent = (convoy.progress * 100.0).round() as u32;
+
+        let bar_width = 200.0;
+        let fill_width = bar_width * convoy.progress;
+
+        div()
+            .flex()
+            .items_center()
+            .gap(px(12.0))
+            .py(px(4.0))
+            .child(
+                div()
+                    .text_color(palette.text)
+                    .w(px(120.0))
+                    .child(convoy.id.clone()),
+            )
+            .child(
+                div()
+                    .w(px(bar_width))
+                    .h(px(8.0))
+                    .rounded(px(4.0))
+                    .bg(palette.element_bg)
+                    .child(
+                        div()
+                            .h_full()
+                            .w(px(fill_width))
+                            .rounded(px(4.0))
+                            .bg(palette.accent_success),
+                    ),
+            )
+            .child(
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .w(px(40.0))
+                    .child(format!("{}%", progress_percent)),
+            )
+    }
+
+    fn render_rigs_section(
+        &self,
+        rigs: &[RigInfo],
+        palette: &DashboardPalette,
+    ) -> impl IntoElement {
+        let items = if rigs.is_empty() {
+            vec![
+                div()
+                    .text_color(palette.text_muted)
+                    .text_sm()
+                    .child("No rigs configured")
+                    .into_any_element(),
+            ]
+        } else {
+            rigs.iter()
+                .map(|rig| self.render_rig_row(rig, palette).into_any_element())
+                .collect()
+        };
+
+        self.render_section("Rigs", items, palette)
+    }
+
+    fn render_rig_row(&self, rig: &RigInfo, palette: &DashboardPalette) -> impl IntoElement {
+        div()
+            .flex()
+            .items_center()
+            .gap(px(8.0))
+            .py(px(4.0))
+            .child(div().text_color(palette.text).child(rig.name.clone()))
+            .child(div().text_color(palette.text_muted).child("→"))
+            .child(
+                div()
+                    .text_color(palette.accent_info)
+                    .text_sm()
+                    .child(rig.path.clone()),
+            )
+    }
+
+    fn render_section(
+        &self,
+        title: &str,
+        items: Vec<gpui::AnyElement>,
+        palette: &DashboardPalette,
+    ) -> impl IntoElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(8.0))
+            .p(px(12.0))
+            .rounded(px(6.0))
+            .bg(palette.panel_bg)
+            .border_1()
+            .border_color(palette.border_variant)
+            .child(
+                div()
+                    .text_color(palette.text)
+                    .pb(px(4.0))
+                    .child(format!("▸ {}", title)),
+            )
+            .children(items)
     }
 }
