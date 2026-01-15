@@ -2,6 +2,7 @@ use anyhow::Result;
 use gpui::{App, Application, Bounds, WindowBounds, WindowOptions, actions, prelude::*, px, size};
 use std::sync::Arc;
 
+mod agent_section;
 mod dashboard_buffer;
 
 use dashboard_buffer::{

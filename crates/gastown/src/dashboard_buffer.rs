@@ -6,6 +6,8 @@ use gpui::{
 };
 use std::sync::Arc;
 
+use crate::agent_section::{AgentSection, AgentSectionPalette};
+
 /// Dashboard color palette matching Zed's One Dark theme.
 /// Values from: assets/themes/one/one.json
 struct DashboardPalette {
@@ -38,6 +40,20 @@ impl DashboardPalette {
             accent_info: rgb(0x74ade8).into(),
             element_bg: rgb(0x2e343e).into(),
             element_hover: rgb(0x363c46).into(),
+        }
+    }
+
+    fn to_agent_section_palette(&self) -> AgentSectionPalette {
+        AgentSectionPalette {
+            panel_bg: self.panel_bg,
+            border_variant: self.border_variant,
+            text: self.text,
+            text_muted: self.text_muted,
+            accent_success: self.accent_success,
+            accent_warning: self.accent_warning,
+            accent_error: self.accent_error,
+            accent_info: self.accent_info,
+            element_bg: self.element_bg,
         }
     }
 }
@@ -401,90 +417,7 @@ impl DashboardView {
         agents: &[AgentInfo],
         palette: &DashboardPalette,
     ) -> impl IntoElement {
-        let items = if agents.is_empty() {
-            vec![
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .child("No agents running")
-                    .into_any_element(),
-            ]
-        } else {
-            agents
-                .iter()
-                .map(|agent| self.render_agent_row(agent, palette).into_any_element())
-                .collect()
-        };
-
-        self.render_section("Agents", items, palette)
-    }
-
-    fn render_agent_row(&self, agent: &AgentInfo, palette: &DashboardPalette) -> impl IntoElement {
-        let (status_icon, status_color) = match &agent.status {
-            AgentStatus::Active => ("●", palette.accent_success),
-            AgentStatus::Idle => ("○", palette.text_muted),
-            AgentStatus::Error(_) => ("✗", palette.accent_error),
-        };
-
-        let mut row = div()
-            .flex()
-            .items_center()
-            .gap(px(8.0))
-            .py(px(4.0))
-            .child(div().text_color(status_color).child(status_icon))
-            .child(div().text_color(palette.text).child(agent.name.clone()));
-
-        if let Some(fill) = agent.context_fill {
-            row = row.child(self.render_context_bar(fill, palette));
-        }
-
-        if let Some(ref tokens) = agent.token_usage {
-            row = row.child(
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .child(format!(
-                        "{}↓ {}↑",
-                        tokens.input_tokens, tokens.output_tokens
-                    )),
-            );
-        }
-
-        row
-    }
-
-    fn render_context_bar(&self, fill: f32, palette: &DashboardPalette) -> impl IntoElement {
-        let fill_percent = (fill * 100.0).round() as u32;
-        let bar_color = if fill > 0.8 {
-            palette.accent_warning
-        } else {
-            palette.accent_info
-        };
-
-        div()
-            .flex()
-            .items_center()
-            .gap(px(4.0))
-            .child(
-                div()
-                    .w(px(60.0))
-                    .h(px(6.0))
-                    .rounded(px(3.0))
-                    .bg(palette.element_bg)
-                    .child(
-                        div()
-                            .h_full()
-                            .w(px(60.0 * fill))
-                            .rounded(px(3.0))
-                            .bg(bar_color),
-                    ),
-            )
-            .child(
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .child(format!("{}%", fill_percent)),
-            )
+        AgentSection::new(agents, palette.to_agent_section_palette())
     }
 
     fn render_convoys_section(
