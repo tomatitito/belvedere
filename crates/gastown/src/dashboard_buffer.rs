@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use crate::agent_section::{AgentSection, AgentSectionPalette};
 use crate::convoy_section::{ConvoySection, ConvoySectionPalette};
+use crate::rig_section::{RigSection, RigSectionPalette};
 
 /// Dashboard color palette matching Zed's One Dark theme.
 /// Values from: assets/themes/one/one.json
@@ -66,6 +67,16 @@ impl DashboardPalette {
             text_muted: self.text_muted,
             accent_success: self.accent_success,
             element_bg: self.element_bg,
+        }
+    }
+
+    fn to_rig_section_palette(&self) -> RigSectionPalette {
+        RigSectionPalette {
+            panel_bg: self.panel_bg,
+            border_variant: self.border_variant,
+            text: self.text,
+            text_muted: self.text_muted,
+            accent_info: self.accent_info,
         }
     }
 }
@@ -445,37 +456,7 @@ impl DashboardView {
         rigs: &[RigInfo],
         palette: &DashboardPalette,
     ) -> impl IntoElement {
-        let items = if rigs.is_empty() {
-            vec![
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .child("No rigs configured")
-                    .into_any_element(),
-            ]
-        } else {
-            rigs.iter()
-                .map(|rig| self.render_rig_row(rig, palette).into_any_element())
-                .collect()
-        };
-
-        self.render_section("Rigs", items, palette)
-    }
-
-    fn render_rig_row(&self, rig: &RigInfo, palette: &DashboardPalette) -> impl IntoElement {
-        div()
-            .flex()
-            .items_center()
-            .gap(px(8.0))
-            .py(px(4.0))
-            .child(div().text_color(palette.text).child(rig.name.clone()))
-            .child(div().text_color(palette.text_muted).child("→"))
-            .child(
-                div()
-                    .text_color(palette.accent_info)
-                    .text_sm()
-                    .child(rig.path.clone()),
-            )
+        RigSection::new(rigs, palette.to_rig_section_palette())
     }
 
     fn render_section(
