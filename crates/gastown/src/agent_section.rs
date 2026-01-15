@@ -1,10 +1,18 @@
-use gpui::{Hsla, IntoElement, ParentElement, Styled, div, px};
+use gpui::{
+    ClickEvent, Hsla, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement,
+    Styled, div, px,
+};
+use std::sync::Arc;
 
 use crate::dashboard_buffer::{AgentInfo, AgentStatus};
+
+type ToggleHandler = Arc<dyn Fn(&ClickEvent, &mut gpui::Window, &mut gpui::App) + 'static>;
 
 pub struct AgentSection {
     agents: Vec<AgentInfo>,
     palette: AgentSectionPalette,
+    expanded: bool,
+    on_toggle: Option<ToggleHandler>,
 }
 
 #[derive(Clone, Copy)]
@@ -25,7 +33,22 @@ impl AgentSection {
         Self {
             agents: agents.to_vec(),
             palette,
+            expanded: true,
+            on_toggle: None,
         }
+    }
+
+    pub fn expanded(mut self, expanded: bool) -> Self {
+        self.expanded = expanded;
+        self
+    }
+
+    pub fn on_toggle(
+        mut self,
+        on_toggle: impl Fn(&ClickEvent, &mut gpui::Window, &mut gpui::App) + 'static,
+    ) -> Self {
+        self.on_toggle = Some(Arc::new(on_toggle));
+        self
     }
 }
 
@@ -34,6 +57,7 @@ impl IntoElement for AgentSection {
 
     fn into_element(self) -> Self::Element {
         let palette = self.palette;
+        let disclosure = if self.expanded { "▾" } else { "▸" };
 
         let items: Vec<gpui::AnyElement> = if self.agents.is_empty() {
             vec![
@@ -50,7 +74,24 @@ impl IntoElement for AgentSection {
                 .collect()
         };
 
-        div()
+        let header = div()
+            .id("agents-header")
+            .flex()
+            .items_center()
+            .gap(px(4.0))
+            .text_color(palette.text)
+            .pb(px(4.0))
+            .cursor_pointer()
+            .child(disclosure)
+            .child("Agents");
+
+        let header = if let Some(on_toggle) = self.on_toggle {
+            header.on_click(move |event, window, cx| on_toggle(event, window, cx))
+        } else {
+            header
+        };
+
+        let section = div()
             .flex()
             .flex_col()
             .gap(px(8.0))
@@ -59,8 +100,13 @@ impl IntoElement for AgentSection {
             .bg(palette.panel_bg)
             .border_1()
             .border_color(palette.border_variant)
-            .child(div().text_color(palette.text).pb(px(4.0)).child("▸ Agents"))
-            .children(items)
+            .child(header);
+
+        if self.expanded {
+            section.children(items)
+        } else {
+            section
+        }
     }
 }
 

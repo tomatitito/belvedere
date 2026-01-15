@@ -1,10 +1,18 @@
-use gpui::{Hsla, IntoElement, ParentElement, Styled, div, px};
+use gpui::{
+    ClickEvent, Hsla, InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement,
+    Styled, div, px,
+};
+use std::sync::Arc;
 
 use crate::dashboard_buffer::ConvoyInfo;
+
+type ToggleHandler = Arc<dyn Fn(&ClickEvent, &mut gpui::Window, &mut gpui::App) + 'static>;
 
 pub struct ConvoySection {
     convoys: Vec<ConvoyInfo>,
     palette: ConvoySectionPalette,
+    expanded: bool,
+    on_toggle: Option<ToggleHandler>,
 }
 
 #[derive(Clone, Copy)]
@@ -22,7 +30,22 @@ impl ConvoySection {
         Self {
             convoys: convoys.to_vec(),
             palette,
+            expanded: true,
+            on_toggle: None,
         }
+    }
+
+    pub fn expanded(mut self, expanded: bool) -> Self {
+        self.expanded = expanded;
+        self
+    }
+
+    pub fn on_toggle(
+        mut self,
+        on_toggle: impl Fn(&ClickEvent, &mut gpui::Window, &mut gpui::App) + 'static,
+    ) -> Self {
+        self.on_toggle = Some(Arc::new(on_toggle));
+        self
     }
 }
 
@@ -31,6 +54,7 @@ impl IntoElement for ConvoySection {
 
     fn into_element(self) -> Self::Element {
         let palette = self.palette;
+        let disclosure = if self.expanded { "▾" } else { "▸" };
 
         let items: Vec<gpui::AnyElement> = if self.convoys.is_empty() {
             vec![
@@ -47,7 +71,24 @@ impl IntoElement for ConvoySection {
                 .collect()
         };
 
-        div()
+        let header = div()
+            .id("convoys-header")
+            .flex()
+            .items_center()
+            .gap(px(4.0))
+            .text_color(palette.text)
+            .pb(px(4.0))
+            .cursor_pointer()
+            .child(disclosure)
+            .child("Convoys");
+
+        let header = if let Some(on_toggle) = self.on_toggle {
+            header.on_click(move |event, window, cx| on_toggle(event, window, cx))
+        } else {
+            header
+        };
+
+        let section = div()
             .flex()
             .flex_col()
             .gap(px(8.0))
@@ -56,13 +97,13 @@ impl IntoElement for ConvoySection {
             .bg(palette.panel_bg)
             .border_1()
             .border_color(palette.border_variant)
-            .child(
-                div()
-                    .text_color(palette.text)
-                    .pb(px(4.0))
-                    .child("▸ Convoys"),
-            )
-            .children(items)
+            .child(header);
+
+        if self.expanded {
+            section.children(items)
+        } else {
+            section
+        }
     }
 }
 

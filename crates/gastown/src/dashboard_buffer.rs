@@ -257,6 +257,9 @@ pub struct DashboardView {
     data_source: Arc<dyn DashboardDataSource>,
     last_update: Option<std::time::Instant>,
     connection_status: ConnectionStatus,
+    agents_expanded: bool,
+    convoys_expanded: bool,
+    rigs_expanded: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -275,9 +278,27 @@ impl DashboardView {
             data_source,
             last_update: None,
             connection_status: ConnectionStatus::Unknown,
+            agents_expanded: true,
+            convoys_expanded: true,
+            rigs_expanded: true,
         };
         view.refresh_sync();
         view
+    }
+
+    pub fn toggle_agents_section(&mut self, cx: &mut Context<Self>) {
+        self.agents_expanded = !self.agents_expanded;
+        cx.notify();
+    }
+
+    pub fn toggle_convoys_section(&mut self, cx: &mut Context<Self>) {
+        self.convoys_expanded = !self.convoys_expanded;
+        cx.notify();
+    }
+
+    pub fn toggle_rigs_section(&mut self, cx: &mut Context<Self>) {
+        self.rigs_expanded = !self.rigs_expanded;
+        cx.notify();
     }
 
     pub fn content(&self) -> String {
@@ -336,11 +357,11 @@ impl Focusable for DashboardView {
 impl EventEmitter<DashboardEvent> for DashboardView {}
 
 impl Render for DashboardView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let palette = DashboardPalette::one_dark();
 
         let content: AnyElement = if let Some(ref data) = self.data {
-            self.render_data(data, &palette).into_any_element()
+            self.render_data(data, &palette, cx).into_any_element()
         } else if let Some(ref err) = self.error {
             self.render_error(err, &palette).into_any_element()
         } else {
@@ -358,7 +379,12 @@ impl Render for DashboardView {
 }
 
 impl DashboardView {
-    fn render_data(&self, data: &DashboardData, palette: &DashboardPalette) -> impl IntoElement {
+    fn render_data(
+        &self,
+        data: &DashboardData,
+        palette: &DashboardPalette,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
         div()
             .flex()
             .flex_col()
@@ -366,9 +392,9 @@ impl DashboardView {
             .p(px(16.0))
             .gap(px(16.0))
             .child(self.render_header(palette))
-            .child(self.render_agents_section(&data.agents, palette))
-            .child(self.render_convoys_section(&data.convoys, palette))
-            .child(self.render_rigs_section(&data.rigs, palette))
+            .child(self.render_agents_section(&data.agents, palette, cx))
+            .child(self.render_convoys_section(&data.convoys, palette, cx))
+            .child(self.render_rigs_section(&data.rigs, palette, cx))
     }
 
     fn render_error(&self, error: &DashboardError, palette: &DashboardPalette) -> impl IntoElement {
@@ -439,24 +465,39 @@ impl DashboardView {
         &self,
         agents: &[AgentInfo],
         palette: &DashboardPalette,
+        cx: &mut Context<Self>,
     ) -> impl IntoElement {
         AgentSection::new(agents, palette.to_agent_section_palette())
+            .expanded(self.agents_expanded)
+            .on_toggle(cx.listener(|this, _event, _window, cx| {
+                this.toggle_agents_section(cx);
+            }))
     }
 
     fn render_convoys_section(
         &self,
         convoys: &[ConvoyInfo],
         palette: &DashboardPalette,
+        cx: &mut Context<Self>,
     ) -> impl IntoElement {
         ConvoySection::new(convoys, palette.to_convoy_section_palette())
+            .expanded(self.convoys_expanded)
+            .on_toggle(cx.listener(|this, _event, _window, cx| {
+                this.toggle_convoys_section(cx);
+            }))
     }
 
     fn render_rigs_section(
         &self,
         rigs: &[RigInfo],
         palette: &DashboardPalette,
+        cx: &mut Context<Self>,
     ) -> impl IntoElement {
         RigSection::new(rigs, palette.to_rig_section_palette())
+            .expanded(self.rigs_expanded)
+            .on_toggle(cx.listener(|this, _event, _window, cx| {
+                this.toggle_rigs_section(cx);
+            }))
     }
 
     fn render_section(
