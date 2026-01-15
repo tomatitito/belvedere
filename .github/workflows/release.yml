@@ -60,11 +60,33 @@ jobs:
       shell: bash -euxo pipefail {0}
     - name: steps::free_disk_space
       run: |
+        # ~1.5GB: .NET SDK
         sudo rm -rf /usr/share/dotnet
+        # ~6GB: Android SDK
         sudo rm -rf /usr/local/lib/android
+        # ~3GB: Haskell (GHC)
         sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/.ghcup
+        # ~2GB: CodeQL
         sudo rm -rf /opt/hostedtoolcache/CodeQL
+        # ~2.5GB: Swift
+        sudo rm -rf /usr/share/swift
+        # ~1.5GB: Java
+        sudo rm -rf /usr/lib/jvm
+        # ~800MB: PowerShell
+        sudo rm -rf /usr/local/share/powershell
+        # ~500MB: Azure CLI
+        sudo rm -rf /opt/az
+        sudo rm -rf /usr/share/az_*
+        # ~500MB: Google Cloud SDK
+        sudo rm -rf /usr/lib/google-cloud-sdk
+        # ~1.5GB: Browsers
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /opt/microsoft
+        sudo rm -rf /opt/google
+        # Docker images
         sudo docker image prune --all --force
+        df -h /
       shell: bash -euxo pipefail {0}
     - name: steps::setup_linux
       run: ./script/linux
@@ -206,11 +228,33 @@ jobs:
         token: ${{ secrets.SENTRY_AUTH_TOKEN }}
     - name: steps::free_disk_space
       run: |
+        # ~1.5GB: .NET SDK
         sudo rm -rf /usr/share/dotnet
+        # ~6GB: Android SDK
         sudo rm -rf /usr/local/lib/android
+        # ~3GB: Haskell (GHC)
         sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/.ghcup
+        # ~2GB: CodeQL
         sudo rm -rf /opt/hostedtoolcache/CodeQL
+        # ~2.5GB: Swift
+        sudo rm -rf /usr/share/swift
+        # ~1.5GB: Java
+        sudo rm -rf /usr/lib/jvm
+        # ~800MB: PowerShell
+        sudo rm -rf /usr/local/share/powershell
+        # ~500MB: Azure CLI
+        sudo rm -rf /opt/az
+        sudo rm -rf /usr/share/az_*
+        # ~500MB: Google Cloud SDK
+        sudo rm -rf /usr/lib/google-cloud-sdk
+        # ~1.5GB: Browsers
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /opt/microsoft
+        sudo rm -rf /opt/google
+        # Docker images
         sudo docker image prune --all --force
+        df -h /
       shell: bash -euxo pipefail {0}
     - name: steps::setup_linux
       run: ./script/linux
@@ -257,11 +301,33 @@ jobs:
         token: ${{ secrets.SENTRY_AUTH_TOKEN }}
     - name: steps::free_disk_space
       run: |
+        # ~1.5GB: .NET SDK
         sudo rm -rf /usr/share/dotnet
+        # ~6GB: Android SDK
         sudo rm -rf /usr/local/lib/android
+        # ~3GB: Haskell (GHC)
         sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/.ghcup
+        # ~2GB: CodeQL
         sudo rm -rf /opt/hostedtoolcache/CodeQL
+        # ~2.5GB: Swift
+        sudo rm -rf /usr/share/swift
+        # ~1.5GB: Java
+        sudo rm -rf /usr/lib/jvm
+        # ~800MB: PowerShell
+        sudo rm -rf /usr/local/share/powershell
+        # ~500MB: Azure CLI
+        sudo rm -rf /opt/az
+        sudo rm -rf /usr/share/az_*
+        # ~500MB: Google Cloud SDK
+        sudo rm -rf /usr/lib/google-cloud-sdk
+        # ~1.5GB: Browsers
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /opt/microsoft
+        sudo rm -rf /opt/google
+        # Docker images
         sudo docker image prune --all --force
+        df -h /
       shell: bash -euxo pipefail {0}
     - name: steps::setup_linux
       run: ./script/linux
