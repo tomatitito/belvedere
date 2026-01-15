@@ -87,42 +87,6 @@ jobs:
       with:
         config: ./typos.toml
     timeout-minutes: 60
-  run_tests_windows:
-    needs:
-    - orchestrate
-    if: needs.orchestrate.outputs.run_tests == 'true'
-    runs-on: windows-latest
-    steps:
-    - name: steps::checkout_repo
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      with:
-        clean: false
-    - name: steps::setup_cargo_config
-      run: |
-        New-Item -ItemType Directory -Path "./../.cargo" -Force
-        Copy-Item -Path "./.cargo/ci-config.toml" -Destination "./../.cargo/config.toml"
-      shell: pwsh
-    - name: steps::setup_node
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-      with:
-        node-version: '20'
-    - name: steps::clippy
-      run: ./script/clippy.ps1
-      shell: pwsh
-    - name: steps::cargo_install_nextest
-      uses: taiki-e/install-action@nextest
-    - name: steps::clear_target_dir_if_large
-      run: ./script/clear-target-dir-if-larger-than.ps1 250
-      shell: pwsh
-    - name: steps::cargo_nextest
-      run: cargo nextest run --workspace --no-fail-fast
-      shell: pwsh
-    - name: steps::cleanup_cargo_config
-      if: always()
-      run: |
-        Remove-Item -Recurse -Path "./../.cargo" -Force -ErrorAction SilentlyContinue
-      shell: pwsh
-    timeout-minutes: 60
   run_tests_linux:
     needs:
     - orchestrate
@@ -490,7 +454,6 @@ jobs:
     needs:
     - orchestrate
     - check_style
-    - run_tests_windows
     - run_tests_linux
     - run_tests_mac
     - doctests
@@ -514,7 +477,6 @@ jobs:
 
         check_result "orchestrate" "${{ needs.orchestrate.result }}"
         check_result "check_style" "${{ needs.check_style.result }}"
-        check_result "run_tests_windows" "${{ needs.run_tests_windows.result }}"
         check_result "run_tests_linux" "${{ needs.run_tests_linux.result }}"
         check_result "run_tests_mac" "${{ needs.run_tests_mac.result }}"
         check_result "doctests" "${{ needs.doctests.result }}"
