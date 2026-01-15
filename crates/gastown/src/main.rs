@@ -3,6 +3,7 @@ use gpui::{App, Application, Bounds, WindowBounds, WindowOptions, actions, prelu
 use std::sync::Arc;
 
 mod agent_section;
+mod convoy_section;
 mod dashboard_buffer;
 
 use dashboard_buffer::{

@@ -7,6 +7,7 @@ use gpui::{
 use std::sync::Arc;
 
 use crate::agent_section::{AgentSection, AgentSectionPalette};
+use crate::convoy_section::{ConvoySection, ConvoySectionPalette};
 
 /// Dashboard color palette matching Zed's One Dark theme.
 /// Values from: assets/themes/one/one.json
@@ -53,6 +54,17 @@ impl DashboardPalette {
             accent_warning: self.accent_warning,
             accent_error: self.accent_error,
             accent_info: self.accent_info,
+            element_bg: self.element_bg,
+        }
+    }
+
+    fn to_convoy_section_palette(&self) -> ConvoySectionPalette {
+        ConvoySectionPalette {
+            panel_bg: self.panel_bg,
+            border_variant: self.border_variant,
+            text: self.text,
+            text_muted: self.text_muted,
+            accent_success: self.accent_success,
             element_bg: self.element_bg,
         }
     }
@@ -425,66 +437,7 @@ impl DashboardView {
         convoys: &[ConvoyInfo],
         palette: &DashboardPalette,
     ) -> impl IntoElement {
-        let items = if convoys.is_empty() {
-            vec![
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .child("No active convoys")
-                    .into_any_element(),
-            ]
-        } else {
-            convoys
-                .iter()
-                .map(|convoy| self.render_convoy_row(convoy, palette).into_any_element())
-                .collect()
-        };
-
-        self.render_section("Convoys", items, palette)
-    }
-
-    fn render_convoy_row(
-        &self,
-        convoy: &ConvoyInfo,
-        palette: &DashboardPalette,
-    ) -> impl IntoElement {
-        let progress_percent = (convoy.progress * 100.0).round() as u32;
-
-        let bar_width = 200.0;
-        let fill_width = bar_width * convoy.progress;
-
-        div()
-            .flex()
-            .items_center()
-            .gap(px(12.0))
-            .py(px(4.0))
-            .child(
-                div()
-                    .text_color(palette.text)
-                    .w(px(120.0))
-                    .child(convoy.id.clone()),
-            )
-            .child(
-                div()
-                    .w(px(bar_width))
-                    .h(px(8.0))
-                    .rounded(px(4.0))
-                    .bg(palette.element_bg)
-                    .child(
-                        div()
-                            .h_full()
-                            .w(px(fill_width))
-                            .rounded(px(4.0))
-                            .bg(palette.accent_success),
-                    ),
-            )
-            .child(
-                div()
-                    .text_color(palette.text_muted)
-                    .text_sm()
-                    .w(px(40.0))
-                    .child(format!("{}%", progress_percent)),
-            )
+        ConvoySection::new(convoys, palette.to_convoy_section_palette())
     }
 
     fn render_rigs_section(
