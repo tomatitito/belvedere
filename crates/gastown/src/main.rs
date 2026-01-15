@@ -4,6 +4,8 @@ use gpui::{
     prelude::*, px, size,
 };
 
+mod dashboard_buffer;
+
 #[cfg(test)]
 mod dashboard_buffer_tests;
 
