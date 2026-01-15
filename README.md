@@ -1,136 +1,142 @@
-# Gazetown Development Environment
+# Gas Town UI
 
-A multi-component system for managing Gazetown instances, overseer operations, and background services.
+A native desktop application for managing [Gas Town](https://github.com/steveyegge/gastown) multi-agent development environments. Built with [GPUI](https://gpui.rs), the high-performance Rust UI framework from [Zed](https://zed.dev).
 
-## Components
+## Overview
 
-### Core Services
-- **mayor/** - Overseer management system
-  - Mail inbox management (`gt mail inbox`)
-  - Rig operations (`gt rig list`)
-  - Patrol coordination (`gt patrol start`)
+Gas Town UI provides a visual interface for:
 
-- **daemon/** - Background activity tracking and monitoring
-- **deacon/** - Service lifecycle management
+- **Rig Management** — View and manage project containers with their associated agents
+- **Agent Coordination** — Monitor Polecats (worker agents) and Crew members
+- **Convoy Tracking** — Track bundled work items across agents in real-time
+- **Dashboard Display** — View Gas Town system status in a native desktop window
 
-### Gazetown Instances
-- **gastown/** - Primary Gazetown instance
-- **gazetown/** - Secondary Gazetown instance with extended documentation
+This is an alternative to the Gas Town web dashboard, offering native performance and deeper OS integration.
 
-Both instances include:
-- **crew/** - Team and agent management
-- **polecats/** - Task execution and coordination
-- **refinery/** - Data processing and transformation
-- **witness/** - Event observation and logging
-
-### Extensions
-- **plugins/** - Plugin system for extending functionality
-- **settings/** - Global configuration management
-
-## Quick Start
+## Installation
 
 ### Prerequisites
-- Rust and Cargo (for building the Gazetown GPUI application)
-- Beads CLI (`bd`) for issue tracking
-- GT tools for Gazetown operations
 
-### Starting the Gazetown Application
+- **Rust** (1.80+) with Cargo
+- **macOS 14+**, **Linux** (with Wayland/X11), or **Windows 10+**
+- **Gas Town CLI** (`gt`) — Install from [steveyegge/gastown](https://github.com/steveyegge/gastown)
 
-The Gazetown app is a minimal GPUI application built on the Zed framework:
+### Build from Source
 
 ```bash
-# Check if it compiles
-cargo check -p gastown
+git clone https://github.com/tomatitito/Gazetown.git
+cd Gazetown
 
 # Build the application
+cargo build -p gastown --release
+
+# Run
+cargo run -p gastown --release
+```
+
+The binary will be at `target/release/gastown`.
+
+## Usage
+
+### Launch the Application
+
+```bash
+# Run directly
+cargo run -p gastown
+
+# Or use the built binary
+./target/release/gastown
+```
+
+This opens the Gas Town window where you can view your Town structure and agent activity.
+
+### Typical Workflow
+
+1. **Start Gas Town services** — Run your Gas Town backend (`gt` commands)
+2. **Launch the UI** — `cargo run -p gastown`
+3. **Monitor agents** — View Polecats executing work
+4. **Track convoys** — Watch progress on bundled tasks
+
+## Development
+
+### Project Structure
+
+```
+crates/gastown/
+├── src/
+│   ├── main.rs              # Application entry point
+│   ├── dashboard_buffer.rs  # Dashboard rendering component
+│   └── *_tests.rs           # Test files
+├── Cargo.toml
+└── README.md
+```
+
+### Build Commands
+
+```bash
+# Check compilation (fast)
+cargo check -p gastown
+
+# Build debug
 cargo build -p gastown
 
-# Run the Gazetown UI
-cargo run -p gastown
+# Build release
+cargo build -p gastown --release
+
+# Run tests
+cargo nextest run -p gastown
 ```
 
-This opens a window titled "Gas Town" - a multi-agent development workspace UI. The application is located in `crates/gastown/` and provides a foundation for rig management and agent coordination.
-
-### Basic Operations
-
-**Check system status:**
-```bash
-gt mail inbox         # Check overseer mail
-gt rig list          # List available rigs
-gt patrol start      # Start patrol operations
-```
-
-**Issue tracking:**
-```bash
-bd ready             # View available work
-bd list              # List all issues
-bd show <id>         # View issue details
-```
-
-## Development Workflow
-
-This project uses **Beads** for AI-native issue tracking. All issues are tracked locally in `.beads/issues.jsonl`.
-
-### Working with Issues
+### Code Style
 
 ```bash
-# Find work
-bd ready
-
-# Start working
-bd update <id> --status=in_progress
-
-# Complete work
-bd close <id>
-
-# Sync changes
-bd sync --flush-only
+cargo fmt --all           # Format code
+./script/clippy           # Run linter
 ```
 
-### Session Management
+## Architecture
 
-**Starting a session:**
-```bash
-bd prime             # Restore context (auto-called by hooks)
-bd ready             # Find available work
-```
+Gas Town UI is built on the GPUI framework, providing:
 
-**Ending a session:**
-```bash
-bd sync --flush-only # Export beads to JSONL
-```
+- **GPU-accelerated rendering** — Smooth 120fps UI updates
+- **Rust safety** — Memory-safe, concurrent operations
+- **Native platform integration** — macOS, Linux, Windows support
 
-## Project Structure
+### Key Concepts
 
-```
-gt/
-├── mayor/           # Overseer management
-├── gastown/         # Gazetown instance 1
-├── gazetown/        # Gazetown instance 2
-├── daemon/          # Background services
-├── deacon/          # Service management
-├── plugins/         # Extension system
-├── settings/        # Configuration
-└── .beads/          # Issue tracking data
-```
+| Concept | Description |
+|---------|-------------|
+| **Town** | Root workspace directory containing all projects |
+| **Rig** | Project container wrapping a git repository |
+| **Polecat** | Ephemeral worker agent that executes tasks |
+| **Crew** | Personal workspace for human developers |
+| **Convoy** | Bundle of issues/tasks assigned to agents |
+| **Hook** | Git worktree storing persistent agent state |
 
-## Configuration
+### Gas Town Integration
 
-- **No git remote**: This repository operates in local-only mode
-- **Issue tracking**: Local JSONL storage via Beads
-- **Context recovery**: Automated via Claude Code hooks
+The UI communicates with Gas Town via:
+- Reading convoy and agent state from the filesystem
+- Parsing beads (`.beads/`) for issue tracking data
+- Monitoring hook worktrees for agent work state
 
-## Documentation
+## Roadmap
 
-- **CLAUDE.md / AGENTS.md** - AI agent workflow instructions
-- **mayor/CLAUDE.md** - Mayor-specific commands and context
-- **.beads/README.md** - Beads issue tracking guide
+| Phase | Status | Description |
+|-------|--------|-------------|
+| **PoC** | ✅ Done | Minimal GPUI window with basic rendering |
+| **Dashboard** | 🚧 In Progress | Display Gas Town web dashboard content |
+| **Rig Panel** | Planned | Visual tree of Town → Rigs → Agents |
+| **Agent Monitor** | Planned | Real-time Polecat status and logs |
+| **Convoy Tracker** | Planned | Progress visualization for work bundles |
+| **MVP** | Planned | Fully functional alternative to web dashboard |
 
-## Learn More
+## License
 
-- **Beads Documentation**: [github.com/steveyegge/beads](https://github.com/steveyegge/beads)
-- **GT Tools**: Check individual component directories for specific documentation
+This project is licensed under the [GPL-3.0](LICENSE-GPL).
 
----
+## Acknowledgments
 
-*A development environment for Gazetown operations and multi-agent coordination*
+- **[Zed](https://zed.dev)** — For the GPUI framework and foundational codebase
+- **[Gas Town](https://github.com/steveyegge/gastown)** — The multi-agent coordination system this UI serves
+- **[Beads](https://github.com/steveyegge/beads)** — Git-native issue tracking integration
