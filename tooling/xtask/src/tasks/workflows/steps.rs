@@ -120,6 +120,16 @@ pub fn setup_linux() -> Step<Run> {
     named::bash("./script/linux")
 }
 
+pub fn free_disk_space() -> Step<Run> {
+    named::bash(indoc::indoc! {r#"
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+    "#})
+}
+
 fn install_mold() -> Step<Run> {
     named::bash("./script/install-mold")
 }
@@ -129,7 +139,8 @@ fn download_wasi_sdk() -> Step<Run> {
 }
 
 pub(crate) fn install_linux_dependencies(job: Job) -> Job {
-    job.add_step(setup_linux())
+    job.add_step(free_disk_space())
+        .add_step(setup_linux())
         .add_step(install_mold())
         .add_step(download_wasi_sdk())
 }

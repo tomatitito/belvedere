@@ -28,6 +28,14 @@ jobs:
       uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
       with:
         token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    - name: steps::free_disk_space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+      shell: bash -euxo pipefail {0}
     - name: steps::setup_linux
       run: ./script/linux
       shell: bash -euxo pipefail {0}
@@ -71,6 +79,14 @@ jobs:
       uses: matbour/setup-sentry-cli@3e938c54b3018bdd019973689ef984e033b0454b
       with:
         token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+    - name: steps::free_disk_space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+      shell: bash -euxo pipefail {0}
     - name: steps::setup_linux
       run: ./script/linux
       shell: bash -euxo pipefail {0}
