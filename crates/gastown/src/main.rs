@@ -4,6 +4,9 @@ use gpui::{
     prelude::*, px, size,
 };
 
+#[cfg(test)]
+mod dashboard_buffer_tests;
+
 actions!(gastown, [Quit]);
 
 fn quit(_: &Quit, cx: &mut App) {

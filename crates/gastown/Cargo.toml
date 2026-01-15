@@ -13,3 +13,10 @@ path = "src/main.rs"
 anyhow.workspace = true
 env_logger.workspace = true
 gpui = { workspace = true, features = ["wayland", "x11", "font-kit"] }
+theme.workspace = true
+ui.workspace = true
+workspace.workspace = true
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }
+workspace = { workspace = true, features = ["test-support"] }
