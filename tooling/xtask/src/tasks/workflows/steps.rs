@@ -67,10 +67,7 @@ pub fn cargo_install_nextest() -> Step<Use> {
 }
 
 pub fn cargo_nextest(platform: Platform) -> Step<Run> {
-    named::run(
-        platform,
-        "cargo nextest run --workspace --no-fail-fast --release",
-    )
+    named::run(platform, "cargo nextest run --workspace --no-fail-fast")
 }
 
 pub fn setup_cargo_config(platform: Platform) -> Step<Run> {

@@ -68,7 +68,7 @@ jobs:
     - name: steps::cargo_install_nextest
       uses: taiki-e/install-action@nextest
     - name: steps::cargo_nextest
-      run: cargo nextest run --workspace --no-fail-fast --release
+      run: cargo nextest run --workspace --no-fail-fast
       shell: bash -euxo pipefail {0}
       env:
         NEXTEST_NO_TESTS: warn
