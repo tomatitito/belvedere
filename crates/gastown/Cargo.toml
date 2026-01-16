@@ -18,6 +18,7 @@ collections.workspace = true
 dirs.workspace = true
 env_logger.workspace = true
 gpui = { workspace = true, features = ["wayland", "x11", "font-kit"] }
+theme.workspace = true
 ui.workspace = true
 
 [dev-dependencies]
