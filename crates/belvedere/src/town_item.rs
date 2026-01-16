@@ -1,6 +1,5 @@
 use gpui::{
     AnyElement, App, Context, EventEmitter, Focusable, IntoElement, Render, SharedString, Window,
-    prelude::*,
 };
 use ui::{Color, Icon, Label, LabelCommon};
 
