@@ -4,7 +4,7 @@
 use anyhow::Result;
 use assets::Assets;
 use belvedere::Town;
-use gpui::{actions, px, size, App, AppContext, Application, Bounds, WindowBounds, WindowOptions};
+use gpui::{App, AppContext, Application, Bounds, WindowBounds, WindowOptions, actions, px, size};
 use std::path::PathBuf;
 
 actions!(belvedere, [Quit]);
@@ -19,6 +19,9 @@ fn main() -> Result<()> {
     let app = Application::new().with_assets(Assets);
 
     app.run(|cx: &mut App| {
+        settings::init(cx);
+        theme::init(theme::LoadThemes::JustBase, cx);
+
         cx.activate(true);
         cx.on_action(quit);
 
