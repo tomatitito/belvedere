@@ -51,6 +51,9 @@ pub mod stash_picker;
 pub mod text_diff_view;
 pub mod worktree_picker;
 
+#[cfg(test)]
+mod rig_git_diff_tests;
+
 actions!(
     git,
     [

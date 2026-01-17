@@ -4,6 +4,8 @@ pub mod terminal_panel;
 mod terminal_path_like_target;
 pub mod terminal_scrollbar;
 mod terminal_slash_command;
+#[cfg(test)]
+mod gt_command_tests;
 
 use assistant_slash_command::SlashCommandRegistry;
 use editor::{EditorSettings, actions::SelectAll, blink_manager::BlinkManager};
